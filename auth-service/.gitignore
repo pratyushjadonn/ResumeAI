@@ -1,0 +1,71 @@
+.idea/
+.vscode/
+.settings/
+.classpath
+.project
+
+# Maven
+.target/
+**/target/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+
+# Node
+node_modules/
+
+# Build files
+build/
+dist/
+
+# IntelliJ
+*.iml
+
+# Temporary files
+*.tmp
+*.swp
+
+# Java
+*.class
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# Coverage
+coverage/
+
+# SonarQube
+.sonar/
+
+# Redis
+.dump.rdb
+
+# Docker
+*.pid
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Log files
+*.log
+*.err
+*.out
+auth-run.*
+
+# Application properties with secrets
+**/application-local.yml
+**/application-dev.yml

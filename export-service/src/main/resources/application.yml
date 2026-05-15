@@ -1,0 +1,18 @@
+export:
+  storage-path: ./exports
+  download-base-url: ${EXPORT_DOWNLOAD_BASE_URL:http://localhost:8080}
+
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+app:
+  rabbitmq:
+    exchange: resumeai.exchange
+    notification-queue: notification.queue
+    export-queue: export.queue
+    notification-routing-key: notification.routing
+    export-routing-key: export.routing

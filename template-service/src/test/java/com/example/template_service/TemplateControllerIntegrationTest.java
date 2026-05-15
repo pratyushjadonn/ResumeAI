@@ -2,8 +2,10 @@ package com.example.template_service;
 
 import com.example.template_service.dto.request.CreateTemplateRequest;
 import com.example.template_service.dto.request.UpdateTemplateRequest;
+import com.example.template_service.dto.response.TemplateResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -62,13 +64,19 @@ class TemplateControllerIntegrationTest {
         JsonNode created = objectMapper.readTree(createResponse);
         long templateId = created.get("id").asLong();
 
-        mockMvc.perform(get("/api/v1/templates"))
+        String templatesResponse = mockMvc.perform(get("/api/v1/templates"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].templateKey").value("modern-blue"));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertContainsTemplate(templatesResponse, templateId, "modern-blue");
 
-        mockMvc.perform(get("/api/v1/templates/featured"))
+        String featuredTemplatesResponse = mockMvc.perform(get("/api/v1/templates/featured"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].featured").value(true));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertContainsTemplate(featuredTemplatesResponse, templateId, "modern-blue");
 
         mockMvc.perform(put("/api/v1/templates/{id}", templateId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -94,9 +102,12 @@ class TemplateControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
 
-        mockMvc.perform(get("/api/v1/templates"))
+        String activeTemplatesAfterDeactivate = mockMvc.perform(get("/api/v1/templates"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertDoesNotContainTemplate(activeTemplatesAfterDeactivate, templateId);
 
         mockMvc.perform(patch("/api/v1/templates/{id}/activate", templateId))
                 .andExpect(status().isOk())
@@ -107,5 +118,20 @@ class TemplateControllerIntegrationTest {
 
         mockMvc.perform(get("/api/v1/templates/{id}", templateId))
                 .andExpect(status().isNotFound());
+    }
+
+    private void assertContainsTemplate(String json, long templateId, String templateKey) throws Exception {
+        TemplateResponse[] templates = objectMapper.readValue(json, TemplateResponse[].class);
+        Assertions.assertThat(templates)
+                .anySatisfy(template -> {
+                    Assertions.assertThat(template.id()).isEqualTo(templateId);
+                    Assertions.assertThat(template.templateKey()).isEqualTo(templateKey);
+                });
+    }
+
+    private void assertDoesNotContainTemplate(String json, long templateId) throws Exception {
+        TemplateResponse[] templates = objectMapper.readValue(json, TemplateResponse[].class);
+        Assertions.assertThat(templates)
+                .noneMatch(template -> template.id().equals(templateId));
     }
 }

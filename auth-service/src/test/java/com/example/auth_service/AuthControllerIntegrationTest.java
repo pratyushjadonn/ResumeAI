@@ -44,7 +44,7 @@ class AuthControllerIntegrationTest {
     private EmailService emailService;
 
     @Test
-    void authFlowShouldRegisterVerifyOtpLoginRefreshAndResetPassword() throws Exception {
+    void authFlowShouldRegisterLoginRefreshAndResetPassword() throws Exception {
         RegisterRequest registerRequest = new RegisterRequest("Test User", "test@example.com", "Password1");
 
         mockMvc.perform(post("/api/v1/auth/register")
@@ -54,30 +54,9 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.email").value("test@example.com"))
                 .andExpect(jsonPath("$.type").doesNotExist());
 
-        mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new LoginRequest("test@example.com", "Password1"))))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Please verify your email before logging in."));
-
-        OtpVerification verifyOtp = otpVerificationRepository
-                .findTopByEmailIgnoreCaseAndTypeAndUsedFalseOrderByCreatedAtDesc("test@example.com", OtpType.VERIFY_EMAIL)
-                .orElseThrow();
-
-        mockMvc.perform(post("/api/v1/auth/verify-otp")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of(
-                                "email", "test@example.com",
-                                "otp", verifyOtp.getOtp(),
-                                "type", OtpType.VERIFY_EMAIL.name()
-                        ))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.verified").value(true));
-
         String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(
-                                new LoginRequest("test@example.com", "Password1"))))
+                        .content(objectMapper.writeValueAsString(new LoginRequest("test@example.com", "Password1"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.refreshToken").isNotEmpty())

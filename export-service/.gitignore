@@ -1,0 +1,42 @@
+HELP.md
+
+# Build output
+target/
+build/
+out/
+.gradle/
+
+# Keep wrapper binaries if present
+!.mvn/wrapper/maven-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Generated exports
+exports/
+
+# Logs
+*.log
+*.err
+*.out
+
+# IDE files
+.idea/
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+.apt_generated/
+.springBeans
+.sts4-cache/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db

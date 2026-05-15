@@ -52,7 +52,7 @@ class AuthControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("test@example.com"))
-                .andExpect(jsonPath("$.type").value("VERIFY_EMAIL"));
+                .andExpect(jsonPath("$.type").doesNotExist());
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

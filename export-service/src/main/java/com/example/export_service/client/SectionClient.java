@@ -24,7 +24,7 @@ public class SectionClient {
     public SectionClient(RestTemplate restTemplate,
                          @Value("${section-service.base-url:http://localhost:8082}") String baseUrl) {
         this.restTemplate = restTemplate;
-        this.baseUrl = baseUrl.replaceAll("/+$", "");
+        this.baseUrl = trimTrailingSlashes(baseUrl);
     }
 
     public List<SectionData> getSections(Long userId, Long resumeId) {
@@ -64,5 +64,13 @@ public class SectionClient {
             boolean visible,
             boolean aiGenerated
     ) {
+    }
+
+    private String trimTrailingSlashes(String value) {
+        int endIndex = value.length();
+        while (endIndex > 0 && value.charAt(endIndex - 1) == '/') {
+            endIndex--;
+        }
+        return value.substring(0, endIndex);
     }
 }

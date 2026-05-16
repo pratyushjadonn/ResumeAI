@@ -20,7 +20,7 @@ public class ResumeClient {
     public ResumeClient(RestTemplate restTemplate,
                         @Value("${resume-service.base-url:http://localhost:8081}") String baseUrl) {
         this.restTemplate = restTemplate;
-        this.baseUrl = baseUrl.replaceAll("/+$", "");
+        this.baseUrl = trimTrailingSlashes(baseUrl);
     }
 
     public ResumeData getResume(Long userId, Long resumeId) {
@@ -67,5 +67,13 @@ public class ResumeClient {
             String status,
             int version
     ) {
+    }
+
+    private String trimTrailingSlashes(String value) {
+        int endIndex = value.length();
+        while (endIndex > 0 && value.charAt(endIndex - 1) == '/') {
+            endIndex--;
+        }
+        return value.substring(0, endIndex);
     }
 }

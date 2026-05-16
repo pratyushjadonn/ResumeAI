@@ -3,9 +3,11 @@ package com.example.auth_service.service.impl;
 import com.example.auth_service.entity.OtpType;
 import com.example.auth_service.exception.EmailDeliveryException;
 import com.example.auth_service.service.EmailService;
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -140,7 +142,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(html, true);
             mailSender.send(message);
             log.info("Email sent successfully to={} subject={}", toEmail, subject);
-        } catch (Exception ex) {
+        } catch (MessagingException | MailException ex) {
             log.error("Failed to send email to={} subject={} error={}", toEmail, subject, ex.getMessage(), ex);
             throw new EmailDeliveryException("Unable to send email. Please try again.", ex);
         }

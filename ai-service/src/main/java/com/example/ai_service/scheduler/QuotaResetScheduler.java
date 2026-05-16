@@ -1,19 +1,13 @@
 package com.example.ai_service.scheduler;
 
 import com.example.ai_service.messaging.QuotaResetPublisher;
-import com.example.ai_service.repository.AiRequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.time.YearMonth;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +24,6 @@ import java.util.Map;
 public class QuotaResetScheduler {
 
     private final QuotaResetPublisher quotaResetPublisher;
-    private final AiRequestRepository aiRequestRepository;
-    private final RabbitTemplate rabbitTemplate;
 
     @Value("${app.rabbit.quota-reset.enabled:true}")
     private boolean quotaResetEnabled;
@@ -61,12 +53,12 @@ public class QuotaResetScheduler {
 
         log.info("Starting monthly quota reset process...");
 
-        try {
-            resetGenerationQuotas();
-            resetAtsQuotas();
+        boolean generationReset = runResetStep("generation", this::resetGenerationQuotas);
+        boolean atsReset = runResetStep("ATS", this::resetAtsQuotas);
+        if (generationReset && atsReset) {
             log.info("Monthly quota reset completed successfully");
-        } catch (Exception e) {
-            log.error("Error during monthly quota reset: {}", e.getMessage(), e);
+        } else {
+            log.warn("Monthly quota reset finished with partial failures");
         }
     }
 
@@ -128,9 +120,7 @@ public class QuotaResetScheduler {
      */
     private List<Long> getAllUserIds() {
         // Mock implementation - replace with actual user retrieval
-        List<Long> userIds = new ArrayList<>();
-        // Query actual users from database/service
-        return userIds;
+        return new ArrayList<>();
     }
 
     /**
@@ -153,5 +143,15 @@ public class QuotaResetScheduler {
     public void verifyQuotaReset() {
         log.debug("Verifying quota reset completion...");
         // Add verification logic here if needed
+    }
+
+    private boolean runResetStep(String stepName, Runnable action) {
+        try {
+            action.run();
+            return true;
+        } catch (RuntimeException ex) {
+            log.error("Error during {} quota reset", stepName, ex);
+            return false;
+        }
     }
 }

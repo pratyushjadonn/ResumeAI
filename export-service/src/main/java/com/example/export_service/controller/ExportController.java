@@ -5,11 +5,14 @@ import com.example.export_service.model.ExportJob;
 import com.example.export_service.service.ExportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +22,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 @RestController
@@ -28,6 +33,8 @@ import java.util.List;
 public class ExportController {
 
     private final ExportService exportService;
+    @Value("${export.storage-path:./exports}")
+    private String storagePath;
 
     @PostMapping("/pdf")
     public ExportJob exportPdf(@Valid @RequestBody ExportRequest request) {
@@ -61,17 +68,41 @@ public class ExportController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        File file = new File(job.filePath());
-        if (!file.exists() || !file.isFile()) {
+        Path filePath = resolveDownloadPath(job.filePath());
+        if (filePath == null || !Files.isRegularFile(filePath)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        Resource resource = new FileSystemResource(file);
-        String fileName = (job.fileName() == null || job.fileName().isBlank()) ? file.getName() : job.fileName();
+        Resource resource = new FileSystemResource(filePath);
+        String fileName = sanitizeFileName((job.fileName() == null || job.fileName().isBlank())
+                ? filePath.getFileName().toString()
+                : job.fileName());
+        MediaType mediaType = MediaTypeFactory.getMediaType(fileName)
+                .orElse(MediaType.APPLICATION_OCTET_STREAM);
+        String contentDisposition = ContentDisposition.attachment()
+                .filename(fileName, StandardCharsets.UTF_8)
+                .build()
+                .toString();
 
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
                 .body(resource);
+    }
+
+    private Path resolveDownloadPath(String filePath) {
+        Path storageRoot = Path.of(storagePath).toAbsolutePath().normalize();
+        Path resolvedPath = Path.of(filePath).toAbsolutePath().normalize();
+        if (!resolvedPath.startsWith(storageRoot)) {
+            return null;
+        }
+        return resolvedPath;
+    }
+
+    private String sanitizeFileName(String fileName) {
+        return fileName.replace("\\", "_")
+                .replace("/", "_")
+                .replace("\r", "")
+                .replace("\n", "");
     }
 }

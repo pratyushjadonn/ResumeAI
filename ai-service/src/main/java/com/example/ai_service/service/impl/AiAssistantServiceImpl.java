@@ -31,6 +31,7 @@ import com.example.ai_service.service.AiAssistantService;
 import com.example.ai_service.service.AiQuotaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -276,7 +277,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
                         ))
                         .toList();
             }
-        } catch (Exception ex) {
+        } catch (DataAccessException ex) {
             log.warn("Failed to fetch AI history from database, using in-memory history", ex);
         }
         return HISTORY.getOrDefault(normalizedUserId, List.of()).stream()
@@ -481,13 +482,13 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         try {
             String openAiResponse = openAiClient.generateText(prompt);
             return new AiCallResult(openAiResponse, "gpt-4o", estimateTokens(openAiResponse));
-        } catch (Exception ex) {
+        } catch (RuntimeException ex) {
             log.warn("OpenAI request failed, switching to Claude fallback", ex);
         }
         try {
             String claudeResponse = claudeClient.generateText(prompt);
             return new AiCallResult(claudeResponse, "claude", estimateTokens(claudeResponse));
-        } catch (Exception ex) {
+        } catch (RuntimeException ex) {
             log.warn("Claude request failed, switching to in-memory fallback", ex);
         }
         return new AiCallResult(fallbackContent, "mock-fallback", estimateTokens(fallbackContent));
@@ -512,7 +513,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
                     .tokensUsed(tokensUsed)
                     .status(status)
                     .build());
-        } catch (Exception ex) {
+        } catch (DataAccessException ex) {
             log.warn("Failed to persist AI request, continuing with response", ex);
         }
     }

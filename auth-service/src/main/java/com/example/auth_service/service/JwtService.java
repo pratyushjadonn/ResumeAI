@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,9 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${security.jwt.secret:Zm9yLWRldmVsb3BtZW50LW9ubHktcmVwbGFjZS10aGlzLXNlY3JldC13aXRoLWEtcHJvcGVyLXNlY3VyZS1rZXk=}")
+    private static final int MINIMUM_JWT_KEY_BYTES = 32;
+
+    @Value("${security.jwt.secret:}")
     private String jwtSecret;
 
     @Value("${security.jwt.access-token-expiration-ms:3600000}")
@@ -29,6 +32,14 @@ public class JwtService {
 
     @Value("${security.jwt.refresh-token-expiration-ms:604800000}")
     private long refreshTokenExpirationMs;
+
+    @PostConstruct
+    void validateConfiguration() {
+        byte[] keyBytes = getSigningKeyBytes();
+        if (keyBytes.length < MINIMUM_JWT_KEY_BYTES) {
+            throw new IllegalStateException("security.jwt.secret must decode to at least 32 bytes");
+        }
+    }
 
     public String generateAccessToken(User user) {
         Map<String, Object> claims = new HashMap<>();
@@ -60,7 +71,9 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         String username = extractUsername(token);
-        return username.equalsIgnoreCase(userDetails.getUsername()) && !isTokenExpired(token);
+        return username != null
+                && username.equalsIgnoreCase(userDetails.getUsername())
+                && !isTokenExpired(token);
     }
 
     public boolean isTokenExpired(String token) {
@@ -93,7 +106,17 @@ public class JwtService {
     }
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return Keys.hmacShaKeyFor(getSigningKeyBytes());
+    }
+
+    private byte[] getSigningKeyBytes() {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException("security.jwt.secret must be configured");
+        }
+        try {
+            return Decoders.BASE64.decode(jwtSecret.trim());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException("security.jwt.secret must be valid Base64", ex);
+        }
     }
 }

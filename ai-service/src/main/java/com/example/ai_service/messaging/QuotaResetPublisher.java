@@ -2,11 +2,16 @@ package com.example.ai_service.messaging;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 import java.time.Instant;
 import java.time.YearMonth;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -51,10 +56,10 @@ public class QuotaResetPublisher {
             rabbitTemplate.convertAndSend(exchangeName, quotaResetRoutingKey, event);
             log.info("Published quota reset event - userId: {}, quotaType: {}, newQuota: {}", 
                      userId, quotaType, newQuota);
-        } catch (Exception e) {
+        } catch (AmqpException e) {
             log.error("Failed to publish quota reset event - userId: {}, error: {}", 
                       userId, e.getMessage());
-            throw new RuntimeException("Failed to publish quota reset event", e);
+            throw new IllegalStateException("Failed to publish quota reset event", e);
         }
     }
 
@@ -66,14 +71,25 @@ public class QuotaResetPublisher {
      * @param newQuota      The new quota value
      * @param isPremiumMap  Map of user IDs to premium status
      */
-    public void publishBatchQuotaReset(java.util.List<Long> userIds, String quotaType, 
-                                      Integer newQuota, java.util.Map<Long, Boolean> isPremiumMap) {
-        for (Long userId : userIds) {
-            Boolean isPremium = isPremiumMap.getOrDefault(userId, false);
-            // Get previous quota (mock implementation)
-            Integer previousQuota = newQuota * 2; // Assume they used half
-            publishQuotaReset(userId, quotaType, previousQuota, newQuota, isPremium);
+    public void publishBatchQuotaReset(List<Long> userIds, String quotaType,
+                                      Integer newQuota, Map<Long, Boolean> isPremiumMap) {
+        if (userIds == null || userIds.isEmpty()) {
+            log.info("No quota reset events to publish for quotaType={}", quotaType);
+            return;
         }
-        log.info("Published batch quota reset for {} users", userIds.size());
+
+        int safeNewQuota = Objects.requireNonNullElse(newQuota, 0);
+        int successfulPublishes = 0;
+        for (Long userId : userIds) {
+            Boolean isPremium = isPremiumMap == null ? Boolean.FALSE : isPremiumMap.getOrDefault(userId, false);
+            Integer previousQuota = safeNewQuota * 2;
+            try {
+                publishQuotaReset(userId, quotaType, previousQuota, safeNewQuota, isPremium);
+                successfulPublishes++;
+            } catch (IllegalStateException ex) {
+                log.error("Skipping failed quota reset publish for userId={} quotaType={}", userId, quotaType, ex);
+            }
+        }
+        log.info("Published batch quota reset for {} of {} users", successfulPublishes, userIds.size());
     }
 }

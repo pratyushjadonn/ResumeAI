@@ -15,11 +15,11 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,7 +33,7 @@ public class InMemoryExportService implements ExportService {
     private final PdfGeneratorService pdfGeneratorService;
     private final ResumeClient resumeClient;
     private final SectionClient sectionClient;
-    private final String storagePath;
+    private final Path storageRoot;
     private final String downloadBaseUrl;
 
     public InMemoryExportService(
@@ -46,7 +46,9 @@ public class InMemoryExportService implements ExportService {
         this.pdfGeneratorService = pdfGeneratorService;
         this.resumeClient = resumeClient;
         this.sectionClient = sectionClient;
-        this.storagePath = storagePath;
+        this.storageRoot = Path.of(Objects.requireNonNull(storagePath, "storagePath"))
+                .toAbsolutePath()
+                .normalize();
         this.downloadBaseUrl = downloadBaseUrl;
     }
 
@@ -92,7 +94,7 @@ public class InMemoryExportService implements ExportService {
             );
             jobs.put(id, completed);
             return completed;
-        } catch (Exception ex) {
+        } catch (IOException | RuntimeException ex) {
             log.error("PDF export failed for jobId={} userId={} resumeId={}", id, request.userId(), request.resumeId(), ex);
             ExportJob failed = new ExportJob(
                     id,
@@ -100,7 +102,7 @@ public class InMemoryExportService implements ExportService {
                     request.resumeId(),
                     ExportFormat.PDF,
                     ExportJobStatus.FAILED,
-                    "https://example.local/exports/" + id + ".pdf",
+                    buildDownloadUrl(id),
                     createdAt,
                     createdAt.plusSeconds(7 * 24 * 60 * 60),
                     null,
@@ -136,15 +138,16 @@ public class InMemoryExportService implements ExportService {
 
     private ExportJob create(ExportRequest request, ExportFormat format) {
         long id = ids.getAndIncrement();
+        Instant now = Instant.now();
         ExportJob job = new ExportJob(
                 id,
                 request.userId(),
                 request.resumeId(),
                 format,
                 ExportJobStatus.COMPLETED,
-                "https://example.local/exports/" + id + "." + format.name().toLowerCase(),
-                Instant.now(),
-                Instant.now().plusSeconds(7 * 24 * 60 * 60),
+                buildDownloadUrl(id),
+                now,
+                now.plusSeconds(7 * 24 * 60 * 60),
                 null,
                 null
         );
@@ -160,9 +163,8 @@ public class InMemoryExportService implements ExportService {
     }
 
     private Path ensureStorageDirectory() throws IOException {
-        Path path = Paths.get(storagePath).toAbsolutePath().normalize();
-        Files.createDirectories(path);
-        return path;
+        Files.createDirectories(storageRoot);
+        return storageRoot;
     }
 
     private String buildPdfFileName(Long jobId) {

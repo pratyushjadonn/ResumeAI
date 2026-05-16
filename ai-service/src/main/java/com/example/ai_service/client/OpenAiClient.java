@@ -15,6 +15,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OpenAiClient {
 
+    private static final String CONTENT_FIELD = "content";
+
     private final WebClient.Builder webClientBuilder;
 
     @Value("${openai.api-key:}")
@@ -31,8 +33,8 @@ public class OpenAiClient {
         Map<String, Object> payload = Map.of(
                 "model", model,
                 "messages", List.of(
-                        Map.of("role", "system", "content", "You are a professional resume writing assistant."),
-                        Map.of("role", "user", "content", prompt)
+                        Map.of("role", "system", CONTENT_FIELD, "You are a professional resume writing assistant."),
+                        Map.of("role", "user", CONTENT_FIELD, prompt)
                 )
         );
 
@@ -51,7 +53,7 @@ public class OpenAiClient {
             throw new IllegalStateException("OpenAI response was empty");
         }
 
-        JsonNode contentNode = response.path("choices").path(0).path("message").path("content");
+        JsonNode contentNode = response.path("choices").path(0).path("message").path(CONTENT_FIELD);
         String content = contentNode.isMissingNode() ? "" : contentNode.asText("");
         if (content.isBlank()) {
             throw new IllegalStateException("OpenAI response content is empty");

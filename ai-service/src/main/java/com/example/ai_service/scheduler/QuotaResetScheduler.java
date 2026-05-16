@@ -73,7 +73,7 @@ public class QuotaResetScheduler {
         Map<Long, Boolean> userPremiumStatus = getUserPremiumStatus(allUserIds);
 
         for (Long userId : allUserIds) {
-            Boolean isPremium = userPremiumStatus.getOrDefault(userId, false);
+            boolean isPremium = Boolean.TRUE.equals(userPremiumStatus.get(userId));
             Integer newQuota = isPremium ? premiumGenerationQuota : freeGenerationQuota;
 
             quotaResetPublisher.publishQuotaReset(
@@ -99,7 +99,7 @@ public class QuotaResetScheduler {
         Map<Long, Boolean> userPremiumStatus = getUserPremiumStatus(allUserIds);
 
         for (Long userId : allUserIds) {
-            Boolean isPremium = userPremiumStatus.getOrDefault(userId, false);
+            boolean isPremium = Boolean.TRUE.equals(userPremiumStatus.get(userId));
             Integer newQuota = isPremium ? premiumAtsQuota : freeAtsQuota;
 
             quotaResetPublisher.publishQuotaReset(

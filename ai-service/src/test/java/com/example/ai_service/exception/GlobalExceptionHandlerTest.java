@@ -54,6 +54,7 @@ class GlobalExceptionHandlerTest {
 
     static class ValidationTarget {
         void handle(Object request) {
+            // Intentionally empty: the test only needs a declared method to build MethodParameter metadata.
         }
     }
 }

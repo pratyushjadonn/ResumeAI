@@ -25,12 +25,13 @@ import java.util.Map;
 @Service
 public class PdfGeneratorService {
 
+    private static final String DEFAULT_TEMPLATE_KEY = "default";
     private static final Map<String, TemplateStyle> TEMPLATE_STYLES = Map.ofEntries(
             Map.entry("modern-professional", new TemplateStyle(StandardFonts.HELVETICA, true, 2f, ColorConstants.BLUE)),
             Map.entry("clean-minimal", new TemplateStyle(StandardFonts.HELVETICA, false, 1f, ColorConstants.BLUE)),
             Map.entry("classic-executive", new TemplateStyle(StandardFonts.TIMES_ROMAN, true, 2f, ColorConstants.DARK_GRAY)),
             Map.entry("creative-portfolio", new TemplateStyle(StandardFonts.HELVETICA, true, 2f, ColorConstants.BLUE)),
-            Map.entry("default", new TemplateStyle(StandardFonts.HELVETICA, true, 2f, ColorConstants.BLUE))
+            Map.entry(DEFAULT_TEMPLATE_KEY, new TemplateStyle(StandardFonts.HELVETICA, true, 2f, ColorConstants.BLUE))
     );
 
     private record TemplateStyle(String fontName, boolean uppercaseHeadings, float dividerWeight, Color accentColor) {}
@@ -44,7 +45,7 @@ public class PdfGeneratorService {
 
             String templateKey = request != null && request.templateKey() != null && !request.templateKey().isBlank()
                     ? request.templateKey()
-                    : (resume != null ? resume.template() : "default");
+                    : (resume != null ? resume.template() : DEFAULT_TEMPLATE_KEY);
             TemplateStyle style = getTemplateStyle(templateKey);
 
             if (resume != null) {
@@ -66,7 +67,7 @@ public class PdfGeneratorService {
     }
 
     private TemplateStyle getTemplateStyle(String templateKey) {
-        return TEMPLATE_STYLES.getOrDefault(normalizeTemplateKey(templateKey), TEMPLATE_STYLES.get("default"));
+        return TEMPLATE_STYLES.getOrDefault(normalizeTemplateKey(templateKey), TEMPLATE_STYLES.get(DEFAULT_TEMPLATE_KEY));
     }
 
     private void addHeader(Document document, ResumeData resume, TemplateStyle style) throws IOException {
@@ -191,7 +192,7 @@ public class PdfGeneratorService {
 
     private String normalizeTemplateKey(String templateKey) {
         if (templateKey == null || templateKey.isBlank()) {
-            return "default";
+            return DEFAULT_TEMPLATE_KEY;
         }
         return templateKey.trim();
     }

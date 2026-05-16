@@ -22,6 +22,10 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public NotificationMessage create(CreateNotificationRequest request) {
+        return createNotificationMessage(request);
+    }
+
+    private NotificationMessage createNotificationMessage(CreateNotificationRequest request) {
         Notification notification = Notification.builder()
                 .recipientId(request.recipientId())
                 .type(NotificationType.valueOf(request.type().trim().toUpperCase()))
@@ -60,8 +64,8 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public List<NotificationMessage> broadcast(BroadcastNotificationRequest request) {
         return List.of(
-                create(new CreateNotificationRequest(1L, "BROADCAST", null, request.message(), request.actionUrl())),
-                create(new CreateNotificationRequest(2L, "BROADCAST", null, request.message(), request.actionUrl()))
+                createNotificationMessage(new CreateNotificationRequest(1L, "BROADCAST", null, request.message(), request.actionUrl())),
+                createNotificationMessage(new CreateNotificationRequest(2L, "BROADCAST", null, request.message(), request.actionUrl()))
         );
     }
 

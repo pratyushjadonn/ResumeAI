@@ -39,6 +39,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AiAssistantController {
 
+    private static final String PREMIUM_PLAN = "PREMIUM";
+
     private final AiAssistantService aiAssistantService;
 
     @PostMapping("/summary")
@@ -46,7 +48,7 @@ public class AiAssistantController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
             @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan,
             @Valid @RequestBody GenerateSummaryRequest request) {
-        return aiAssistantService.generateSummary(userId, "PREMIUM".equalsIgnoreCase(plan), request);
+        return aiAssistantService.generateSummary(userId, PREMIUM_PLAN.equalsIgnoreCase(plan), request);
     }
 
     @PostMapping("/bullets")
@@ -54,7 +56,7 @@ public class AiAssistantController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
             @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan,
             @Valid @RequestBody GenerateBulletsRequest request) {
-        return aiAssistantService.generateBullets(userId, "PREMIUM".equalsIgnoreCase(plan), request);
+        return aiAssistantService.generateBullets(userId, PREMIUM_PLAN.equalsIgnoreCase(plan), request);
     }
 
     @PostMapping("/match")
@@ -62,7 +64,7 @@ public class AiAssistantController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
             @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan,
             @Valid @RequestBody JobMatchRequest request) {
-        return aiAssistantService.analyzeJobMatch(userId, "PREMIUM".equalsIgnoreCase(plan), request);
+        return aiAssistantService.analyzeJobMatch(userId, PREMIUM_PLAN.equalsIgnoreCase(plan), request);
     }
 
     @PostMapping("/cover-letter")
@@ -70,7 +72,7 @@ public class AiAssistantController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
             @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan,
             @Valid @RequestBody CoverLetterRequest request) {
-        return aiAssistantService.generateCoverLetter(userId, "PREMIUM".equalsIgnoreCase(plan), request);
+        return aiAssistantService.generateCoverLetter(userId, PREMIUM_PLAN.equalsIgnoreCase(plan), request);
     }
 
     @PostMapping("/improve-section")
@@ -78,7 +80,7 @@ public class AiAssistantController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
             @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan,
             @Valid @RequestBody ImproveSectionRequest request) {
-        return aiAssistantService.improveSection(userId, "PREMIUM".equalsIgnoreCase(plan), request);
+        return aiAssistantService.improveSection(userId, PREMIUM_PLAN.equalsIgnoreCase(plan), request);
     }
 
     @PostMapping("/section-summary")
@@ -86,7 +88,7 @@ public class AiAssistantController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
             @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan,
             @Valid @RequestBody GenerateSectionSummaryRequest request) {
-        return aiAssistantService.generateSectionSummary(userId, "PREMIUM".equalsIgnoreCase(plan), request);
+        return aiAssistantService.generateSectionSummary(userId, PREMIUM_PLAN.equalsIgnoreCase(plan), request);
     }
 
     @PostMapping("/ats")
@@ -94,7 +96,7 @@ public class AiAssistantController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
             @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan,
             @Valid @RequestBody AtsCheckRequest request) {
-        return aiAssistantService.checkAts(userId, "PREMIUM".equalsIgnoreCase(plan), request);
+        return aiAssistantService.checkAts(userId, PREMIUM_PLAN.equalsIgnoreCase(plan), request);
     }
 
     @PostMapping("/skills")
@@ -102,7 +104,7 @@ public class AiAssistantController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
             @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan,
             @Valid @RequestBody SkillSuggestionsRequest request) {
-        return aiAssistantService.suggestSkills(userId, "PREMIUM".equalsIgnoreCase(plan), request);
+        return aiAssistantService.suggestSkills(userId, PREMIUM_PLAN.equalsIgnoreCase(plan), request);
     }
 
     @PostMapping("/tailor")
@@ -110,7 +112,7 @@ public class AiAssistantController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
             @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan,
             @Valid @RequestBody TailorResumeRequest request) {
-        return aiAssistantService.tailorResumeForJob(userId, "PREMIUM".equalsIgnoreCase(plan), request);
+        return aiAssistantService.tailorResumeForJob(userId, PREMIUM_PLAN.equalsIgnoreCase(plan), request);
     }
 
     @PostMapping("/translate")
@@ -118,7 +120,7 @@ public class AiAssistantController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
             @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan,
             @Valid @RequestBody TranslateResumeRequest request) {
-        return aiAssistantService.translateResume(userId, "PREMIUM".equalsIgnoreCase(plan), request);
+        return aiAssistantService.translateResume(userId, PREMIUM_PLAN.equalsIgnoreCase(plan), request);
     }
 
     @GetMapping("/history")
@@ -129,6 +131,6 @@ public class AiAssistantController {
     @GetMapping("/quota")
     public QuotaResponse getQuota(@RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId,
                                   @RequestHeader(value = "X-User-Plan", defaultValue = "FREE") String plan) {
-        return aiAssistantService.getQuota(userId, "PREMIUM".equalsIgnoreCase(plan));
+        return aiAssistantService.getQuota(userId, PREMIUM_PLAN.equalsIgnoreCase(plan));
     }
 }

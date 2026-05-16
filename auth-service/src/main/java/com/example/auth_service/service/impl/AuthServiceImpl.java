@@ -50,6 +50,8 @@ import java.util.UUID;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
+    private static final String USER_NOT_FOUND_MESSAGE = "User not found";
+
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -98,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
     public OtpVerificationResponse verifyOtp(VerifyOtpRequest request) {
         String normalizedEmail = normalizeEmail(request.email());
         User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
-                .orElseThrow(() -> new BadRequestException("User not found"));
+                .orElseThrow(() -> new BadRequestException(USER_NOT_FOUND_MESSAGE));
 
         if (request.type() == OtpType.VERIFY_EMAIL) {
             if (user.getProvider() != AuthProvider.LOCAL) {
@@ -141,7 +143,7 @@ public class AuthServiceImpl implements AuthService {
     public OtpDispatchResponse resendOtp(ResendOtpRequest request) {
         String normalizedEmail = normalizeEmail(request.email());
         User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
-                .orElseThrow(() -> new BadRequestException("User not found"));
+                .orElseThrow(() -> new BadRequestException(USER_NOT_FOUND_MESSAGE));
 
         if (request.type() == OtpType.VERIFY_EMAIL) {
             if (user.getProvider() != AuthProvider.LOCAL) {
@@ -162,7 +164,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(LoginRequest request) {
         String normalizedEmail = normalizeEmail(request.email());
         User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND_MESSAGE));
 
         if (!user.isActive()) {
             throw new ForbiddenOperationException("Your account is deactivated");
@@ -364,7 +366,7 @@ public class AuthServiceImpl implements AuthService {
     private User findUserByEmail(String email) {
         return userRepository.findByEmailIgnoreCase(normalizeEmail(email))
                 .filter(User::isActive)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND_MESSAGE));
     }
 
     private SubscriptionPlan parseSubscriptionPlan(String subscriptionPlan) {

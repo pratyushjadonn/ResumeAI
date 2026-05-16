@@ -50,7 +50,10 @@ public class OtpServiceImpl implements OtpService {
     @Override
     @Transactional
     public OtpDispatchResponse createAndSendOtp(String email, String fullName, OtpType type) {
-        String normalizedEmail = normalizeEmail(email);
+        return createAndSendOtpInternal(normalizeEmail(email), fullName, type);
+    }
+
+    private OtpDispatchResponse createAndSendOtpInternal(String normalizedEmail, String fullName, OtpType type) {
         rateLimitService.checkRateLimit(
                 "otp-create:" + type.name() + ":" + normalizedEmail,
                 otpMaxRequestsPerWindow,
@@ -152,7 +155,7 @@ public class OtpServiceImpl implements OtpService {
                     }
                 });
 
-        return createAndSendOtp(normalizedEmail, fullName, type);
+        return createAndSendOtpInternal(normalizedEmail, fullName, type);
     }
 
     @Override

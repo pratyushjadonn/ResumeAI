@@ -52,6 +52,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class AiAssistantServiceImpl implements AiAssistantService {
 
+    private static final String STATUS_COMPLETED = "COMPLETED";
     private static final Pattern SPLIT_PATTERN = Pattern.compile("[^a-zA-Z0-9+#.]+");
     private static final Set<String> STOP_WORDS = Set.of(
             "and", "the", "with", "for", "you", "your", "are", "from", "that", "this",
@@ -88,7 +89,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         if (focusArea != null) {
             keywords.add(focusArea);
         }
-        saveAiRequest(normalizedUserId, null, "SUMMARY", prompt, aiResult.content(), aiResult.modelUsed(), aiResult.tokensUsed(), "COMPLETED");
+        saveAiRequest(normalizedUserId, null, "SUMMARY", prompt, aiResult.content(), aiResult.modelUsed(), aiResult.tokensUsed(), STATUS_COMPLETED);
         aiQuotaService.incrementAiGeneration(normalizedUserId);
         logHistory(normalizedUserId, null, "GENERATE_SUMMARY", aiResult.modelUsed(), aiResult.tokensUsed());
         return new SummaryResponse(aiResult.content(), keywords);
@@ -115,7 +116,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         AiCallResult aiResult = generateTextWithFallback(prompt, String.join("\n", fallbackBullets));
         List<String> bullets = extractListFromText(aiResult.content(), 4, fallbackBullets);
 
-        saveAiRequest(normalizedUserId, null, "BULLETS", prompt, String.join("\n", bullets), aiResult.modelUsed(), estimateTokens(String.join("\n", bullets)), "COMPLETED");
+        saveAiRequest(normalizedUserId, null, "BULLETS", prompt, String.join("\n", bullets), aiResult.modelUsed(), estimateTokens(String.join("\n", bullets)), STATUS_COMPLETED);
         aiQuotaService.incrementAiGeneration(normalizedUserId);
         logHistory(normalizedUserId, null, "GENERATE_BULLETS", aiResult.modelUsed(), estimateTokens(String.join(" ", bullets)));
         return new BulletsResponse(bullets);
@@ -131,7 +132,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         AiCallResult aiResult = generateTextWithFallback(prompt, String.join("\n", fallbackRecommendations));
         List<String> recommendations = extractListFromText(aiResult.content(), 3, fallbackRecommendations);
 
-        saveAiRequest(normalizedUserId, null, "MATCH_ANALYSIS", prompt, String.join("\n", recommendations), aiResult.modelUsed(), estimateTokens(String.join("\n", recommendations)), "COMPLETED");
+        saveAiRequest(normalizedUserId, null, "MATCH_ANALYSIS", prompt, String.join("\n", recommendations), aiResult.modelUsed(), estimateTokens(String.join("\n", recommendations)), STATUS_COMPLETED);
         aiQuotaService.incrementAiGeneration(normalizedUserId);
         logHistory(normalizedUserId, null, "ANALYZE_MATCH", aiResult.modelUsed(), estimateTokens(String.join(" ", recommendations)));
         return new JobMatchResponse(match.score(), match.matchedKeywords(), match.missingKeywords(), recommendations);
@@ -155,7 +156,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
                 request.highlights()
         );
         AiCallResult aiResult = generateTextWithFallback(prompt, fallbackContent);
-        saveAiRequest(normalizedUserId, request.resumeId(), "COVER_LETTER", prompt, aiResult.content(), aiResult.modelUsed(), aiResult.tokensUsed(), "COMPLETED");
+        saveAiRequest(normalizedUserId, request.resumeId(), "COVER_LETTER", prompt, aiResult.content(), aiResult.modelUsed(), aiResult.tokensUsed(), STATUS_COMPLETED);
         aiQuotaService.incrementAiGeneration(normalizedUserId);
         logHistory(normalizedUserId, request.resumeId(), "GENERATE_COVER_LETTER", aiResult.modelUsed(), aiResult.tokensUsed());
         return new CoverLetterResponse(aiResult.content());
@@ -172,7 +173,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
                 + " Added clearer impact, stronger action verbs, and tighter phrasing.";
         String prompt = promptBuilder.buildImproveSectionPrompt(request.sectionType().trim(), request.content().trim(), tone);
         AiCallResult aiResult = generateTextWithFallback(prompt, fallback);
-        saveAiRequest(normalizedUserId, request.resumeId(), "IMPROVE_SECTION", prompt, aiResult.content(), aiResult.modelUsed(), aiResult.tokensUsed(), "COMPLETED");
+        saveAiRequest(normalizedUserId, request.resumeId(), "IMPROVE_SECTION", prompt, aiResult.content(), aiResult.modelUsed(), aiResult.tokensUsed(), STATUS_COMPLETED);
         aiQuotaService.incrementAiGeneration(normalizedUserId);
         logHistory(normalizedUserId, request.resumeId(), "IMPROVE_SECTION", aiResult.modelUsed(), aiResult.tokensUsed());
         return new ImproveSectionResponse(aiResult.content());
@@ -193,7 +194,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         AiCallResult aiResult = generateTextWithFallback(prompt, fallbackSummary);
         String normalizedSummary = normalizeSectionSummary(aiResult.content(), fallbackSummary);
 
-        saveAiRequest(normalizedUserId, request.resumeId(), "SECTION_SUMMARY", prompt, normalizedSummary, aiResult.modelUsed(), estimateTokens(normalizedSummary), "COMPLETED");
+        saveAiRequest(normalizedUserId, request.resumeId(), "SECTION_SUMMARY", prompt, normalizedSummary, aiResult.modelUsed(), estimateTokens(normalizedSummary), STATUS_COMPLETED);
         aiQuotaService.incrementAiGeneration(normalizedUserId);
         logHistory(normalizedUserId, request.resumeId(), "GENERATE_SECTION_SUMMARY", aiResult.modelUsed(), estimateTokens(normalizedSummary));
         return new SectionSummaryResponse(normalizedSummary);
@@ -209,7 +210,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         AiCallResult aiResult = generateTextWithFallback(prompt, String.join("\n", fallbackRecommendations));
         List<String> recommendations = extractListFromText(aiResult.content(), 3, fallbackRecommendations);
 
-        saveAiRequest(normalizedUserId, request.resumeId(), "ATS", prompt, String.join("\n", recommendations), aiResult.modelUsed(), estimateTokens(String.join("\n", recommendations)), "COMPLETED");
+        saveAiRequest(normalizedUserId, request.resumeId(), "ATS", prompt, String.join("\n", recommendations), aiResult.modelUsed(), estimateTokens(String.join("\n", recommendations)), STATUS_COMPLETED);
         aiQuotaService.incrementAtsUsage(normalizedUserId);
         logHistory(normalizedUserId, request.resumeId(), "CHECK_ATS", aiResult.modelUsed(), estimateTokens(String.join(" ", recommendations)));
         return new AtsCheckResponse(match.score(), match.matchedKeywords(), match.missingKeywords(), recommendations, true);
@@ -224,7 +225,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         AiCallResult aiResult = generateTextWithFallback(prompt, String.join(", ", fallbackSkills));
         List<String> skills = extractSkills(aiResult.content(), fallbackSkills);
 
-        saveAiRequest(normalizedUserId, null, "SUGGEST_SKILLS", prompt, String.join(", ", skills), aiResult.modelUsed(), estimateTokens(String.join(", ", skills)), "COMPLETED");
+        saveAiRequest(normalizedUserId, null, "SUGGEST_SKILLS", prompt, String.join(", ", skills), aiResult.modelUsed(), estimateTokens(String.join(", ", skills)), STATUS_COMPLETED);
         aiQuotaService.incrementAiGeneration(normalizedUserId);
         logHistory(normalizedUserId, null, "SUGGEST_SKILLS", aiResult.modelUsed(), estimateTokens(String.join(", ", skills)));
         return new SkillSuggestionsResponse(skills);
@@ -240,7 +241,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         String prompt = promptBuilder.buildTailorPrompt(request.resumeJson().trim(), request.jobDescription().trim());
         AiCallResult aiResult = generateTextWithFallback(prompt, fallback);
 
-        saveAiRequest(normalizedUserId, request.resumeId(), "TAILOR_RESUME", prompt, aiResult.content(), aiResult.modelUsed(), aiResult.tokensUsed(), "COMPLETED");
+        saveAiRequest(normalizedUserId, request.resumeId(), "TAILOR_RESUME", prompt, aiResult.content(), aiResult.modelUsed(), aiResult.tokensUsed(), STATUS_COMPLETED);
         aiQuotaService.incrementAiGeneration(normalizedUserId);
         logHistory(normalizedUserId, request.resumeId(), "TAILOR_RESUME", aiResult.modelUsed(), aiResult.tokensUsed());
         return new TailorResumeResponse(aiResult.content());
@@ -254,7 +255,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         String prompt = promptBuilder.buildTranslatePrompt(request.resumeText().trim(), request.targetLanguage().trim());
         AiCallResult aiResult = generateTextWithFallback(prompt, fallback);
 
-        saveAiRequest(normalizedUserId, request.resumeId(), "TRANSLATE_RESUME", prompt, aiResult.content(), aiResult.modelUsed(), aiResult.tokensUsed(), "COMPLETED");
+        saveAiRequest(normalizedUserId, request.resumeId(), "TRANSLATE_RESUME", prompt, aiResult.content(), aiResult.modelUsed(), aiResult.tokensUsed(), STATUS_COMPLETED);
         aiQuotaService.incrementAiGeneration(normalizedUserId);
         logHistory(normalizedUserId, request.resumeId(), "TRANSLATE_RESUME", aiResult.modelUsed(), aiResult.tokensUsed());
         return new TranslationResponse(aiResult.content(), request.targetLanguage().trim());
@@ -406,7 +407,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
                         resumeId,
                         modelUsed,
                         tokensUsed,
-                        "COMPLETED",
+                        STATUS_COMPLETED,
                         Instant.now()
                 ));
     }

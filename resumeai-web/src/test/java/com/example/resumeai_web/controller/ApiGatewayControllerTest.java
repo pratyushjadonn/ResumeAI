@@ -66,7 +66,7 @@ class ApiGatewayControllerTest {
                 (left, right) -> true
         ));
 
-        var responseEntity = controller.proxyGet(request);
+        var responseEntity = controller.proxyGet(request, "templates");
 
         ArgumentCaptor<HttpRequest> requestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
         verify(httpClient).send(requestCaptor.capture(), any(HttpResponse.BodyHandler.class));
@@ -91,7 +91,7 @@ class ApiGatewayControllerTest {
         when(httpResponse.body()).thenReturn("created".getBytes(StandardCharsets.UTF_8));
         when(httpResponse.headers()).thenReturn(HttpHeaders.of(Map.of(), (left, right) -> true));
 
-        var responseEntity = controller.proxyPost(request);
+        var responseEntity = controller.proxyPost(request, "ai/summary");
 
         ArgumentCaptor<HttpRequest> requestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
         verify(httpClient).send(requestCaptor.capture(), any(HttpResponse.BodyHandler.class));
@@ -108,7 +108,7 @@ class ApiGatewayControllerTest {
         when(gatewayRoutingService.resolveTargetBaseUrl("/api/v1/unknown"))
                 .thenThrow(new IllegalArgumentException("No route"));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.proxyGet(request));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.proxyGet(request, "unknown"));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
@@ -122,7 +122,7 @@ class ApiGatewayControllerTest {
         when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenThrow(new InterruptedException("interrupted"));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.proxyDelete(request));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.proxyDelete(request, "exports/1"));
 
         assertEquals(HttpStatus.BAD_GATEWAY, exception.getStatusCode());
         assertTrue(Thread.currentThread().isInterrupted());
@@ -137,7 +137,7 @@ class ApiGatewayControllerTest {
         when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenThrow(new IOException("down"));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.proxyPut(request));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.proxyPut(request, "resumes/9"));
 
         assertEquals(HttpStatus.BAD_GATEWAY, exception.getStatusCode());
     }

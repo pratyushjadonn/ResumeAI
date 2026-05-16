@@ -11,6 +11,7 @@ import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,35 +56,40 @@ public class ApiGatewayController {
     }
 
     @GetMapping({"/api/v1", "/api/v1/{*path}"})
-    public ResponseEntity<byte[]> proxyGet(HttpServletRequest request) {
-        return proxy(request);
+    public ResponseEntity<byte[]> proxyGet(HttpServletRequest request,
+                                           @PathVariable(value = "path", required = false) String path) {
+        return proxy(request, path);
     }
 
     @PostMapping({"/api/v1", "/api/v1/{*path}"})
-    public ResponseEntity<byte[]> proxyPost(HttpServletRequest request) {
-        return proxy(request);
+    public ResponseEntity<byte[]> proxyPost(HttpServletRequest request,
+                                            @PathVariable(value = "path", required = false) String path) {
+        return proxy(request, path);
     }
 
     @PutMapping({"/api/v1", "/api/v1/{*path}"})
-    public ResponseEntity<byte[]> proxyPut(HttpServletRequest request) {
-        return proxy(request);
+    public ResponseEntity<byte[]> proxyPut(HttpServletRequest request,
+                                           @PathVariable(value = "path", required = false) String path) {
+        return proxy(request, path);
     }
 
     @PatchMapping({"/api/v1", "/api/v1/{*path}"})
-    public ResponseEntity<byte[]> proxyPatch(HttpServletRequest request) {
-        return proxy(request);
+    public ResponseEntity<byte[]> proxyPatch(HttpServletRequest request,
+                                             @PathVariable(value = "path", required = false) String path) {
+        return proxy(request, path);
     }
 
     @DeleteMapping({"/api/v1", "/api/v1/{*path}"})
-    public ResponseEntity<byte[]> proxyDelete(HttpServletRequest request) {
-        return proxy(request);
+    public ResponseEntity<byte[]> proxyDelete(HttpServletRequest request,
+                                              @PathVariable(value = "path", required = false) String path) {
+        return proxy(request, path);
     }
 
-    private ResponseEntity<byte[]> proxy(HttpServletRequest request) {
-        String path = request.getRequestURI();
+    private ResponseEntity<byte[]> proxy(HttpServletRequest request, String path) {
+        String requestPath = resolveRequestPath(path);
         try {
-            String targetBaseUrl = gatewayRoutingService.resolveTargetBaseUrl(path);
-            String targetUrl = buildTargetUrl(targetBaseUrl, path, request.getQueryString());
+            String targetBaseUrl = gatewayRoutingService.resolveTargetBaseUrl(requestPath);
+            String targetUrl = buildTargetUrl(targetBaseUrl, requestPath, request.getQueryString());
 
             byte[] requestBody = StreamUtils.copyToByteArray(request.getInputStream());
             HttpRequest.Builder builder = HttpRequest.newBuilder()
@@ -142,6 +148,13 @@ public class ApiGatewayController {
         return HttpMethod.POST.matches(method)
                 || HttpMethod.PUT.matches(method)
                 || HttpMethod.PATCH.matches(method);
+    }
+
+    private String resolveRequestPath(String path) {
+        if (path == null || path.isBlank()) {
+            return "/api/v1";
+        }
+        return path.startsWith("/") ? "/api/v1" + path : "/api/v1/" + path;
     }
 
     private String buildTargetUrl(String baseUrl, String path, String queryString) {

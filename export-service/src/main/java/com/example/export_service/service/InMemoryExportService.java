@@ -28,6 +28,8 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class InMemoryExportService implements ExportService {
 
+    private static final long EXPORT_TTL_SECONDS = 7L * 24 * 60 * 60;
+
     private final AtomicLong ids = new AtomicLong(1);
     private final Map<Long, ExportJob> jobs = new ConcurrentHashMap<>();
     private final PdfGeneratorService pdfGeneratorService;
@@ -65,7 +67,7 @@ public class InMemoryExportService implements ExportService {
                 ExportJobStatus.PROCESSING,
                 buildDownloadUrl(id),
                 createdAt,
-                createdAt.plusSeconds(7 * 24 * 60 * 60),
+                createdAt.plusSeconds(EXPORT_TTL_SECONDS),
                 null,
                 null
         );
@@ -88,7 +90,7 @@ public class InMemoryExportService implements ExportService {
                     ExportJobStatus.COMPLETED,
                     buildDownloadUrl(id),
                     createdAt,
-                    createdAt.plusSeconds(7 * 24 * 60 * 60),
+                    createdAt.plusSeconds(EXPORT_TTL_SECONDS),
                     outputFile.toAbsolutePath().toString(),
                     fileName
             );
@@ -104,7 +106,7 @@ public class InMemoryExportService implements ExportService {
                     ExportJobStatus.FAILED,
                     buildDownloadUrl(id),
                     createdAt,
-                    createdAt.plusSeconds(7 * 24 * 60 * 60),
+                    createdAt.plusSeconds(EXPORT_TTL_SECONDS),
                     null,
                     null
             );
@@ -147,7 +149,7 @@ public class InMemoryExportService implements ExportService {
                 ExportJobStatus.COMPLETED,
                 buildDownloadUrl(id),
                 now,
-                now.plusSeconds(7 * 24 * 60 * 60),
+                now.plusSeconds(EXPORT_TTL_SECONDS),
                 null,
                 null
         );

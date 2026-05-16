@@ -36,33 +36,33 @@ public class PdfGeneratorService {
     private record TemplateStyle(String fontName, boolean uppercaseHeadings, float dividerWeight, Color accentColor) {}
 
     public Path generatePdf(ExportRequest request, ResumeData resume, List<SectionData> sections, Path outputFile) throws IOException {
-        PdfWriter writer = new PdfWriter(outputFile.toFile());
-        PdfDocument pdfDocument = new PdfDocument(writer);
-        Document document = new Document(pdfDocument, PageSize.A4);
+        try (PdfWriter writer = new PdfWriter(outputFile.toFile());
+             PdfDocument pdfDocument = new PdfDocument(writer);
+             Document document = new Document(pdfDocument, PageSize.A4)) {
 
-        document.setMargins(36, 36, 36, 36);
+            document.setMargins(36, 36, 36, 36);
 
-        String templateKey = request != null && request.templateKey() != null && !request.templateKey().isBlank()
-                ? request.templateKey()
-                : (resume != null ? resume.template() : "default");
-        TemplateStyle style = getTemplateStyle(templateKey);
-        
-        if (resume != null) {
-            addHeader(document, resume, style);
-            addSummary(document, resume.summary(), style);
+            String templateKey = request != null && request.templateKey() != null && !request.templateKey().isBlank()
+                    ? request.templateKey()
+                    : (resume != null ? resume.template() : "default");
+            TemplateStyle style = getTemplateStyle(templateKey);
+
+            if (resume != null) {
+                addHeader(document, resume, style);
+                addSummary(document, resume.summary(), style);
+            }
+
+            if (sections != null && !sections.isEmpty()) {
+                addSections(document, sections, style);
+            } else {
+                document.add(new Paragraph("No resume sections available. Please add content in the Resume Builder.")
+                        .setFont(PdfFontFactory.createFont(style.fontName()))
+                        .setFontSize(11)
+                        .setFontColor(ColorConstants.GRAY));
+            }
+
+            return outputFile;
         }
-        
-        if (sections != null && !sections.isEmpty()) {
-            addSections(document, sections, style);
-        } else {
-            document.add(new Paragraph("No resume sections available. Please add content in the Resume Builder.")
-                    .setFont(PdfFontFactory.createFont(style.fontName()))
-                    .setFontSize(11)
-                    .setFontColor(ColorConstants.GRAY));
-        }
-
-        document.close();
-        return outputFile;
     }
 
     private TemplateStyle getTemplateStyle(String templateKey) {

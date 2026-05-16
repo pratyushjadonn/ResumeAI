@@ -7,9 +7,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StreamUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -40,25 +42,42 @@ public class ApiGatewayController {
     private final HttpClient httpClient;
 
     public ApiGatewayController(GatewayRoutingService gatewayRoutingService) {
-        this.gatewayRoutingService = gatewayRoutingService;
-        this.httpClient = HttpClient.newBuilder()
+        this(gatewayRoutingService, HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
-                .build();
+                .build());
     }
 
-    @RequestMapping(
-            path = "/api/v1/**",
-            method = {
-                    RequestMethod.GET,
-                    RequestMethod.POST,
-                    RequestMethod.PUT,
-                    RequestMethod.PATCH,
-                    RequestMethod.DELETE,
-                    RequestMethod.OPTIONS,
-                    RequestMethod.HEAD
-            }
-    )
-    public ResponseEntity<byte[]> proxy(HttpServletRequest request) {
+    ApiGatewayController(GatewayRoutingService gatewayRoutingService, HttpClient httpClient) {
+        this.gatewayRoutingService = gatewayRoutingService;
+        this.httpClient = httpClient;
+    }
+
+    @GetMapping({"/api/v1", "/api/v1/{*path}"})
+    public ResponseEntity<byte[]> proxyGet(HttpServletRequest request) {
+        return proxy(request);
+    }
+
+    @PostMapping({"/api/v1", "/api/v1/{*path}"})
+    public ResponseEntity<byte[]> proxyPost(HttpServletRequest request) {
+        return proxy(request);
+    }
+
+    @PutMapping({"/api/v1", "/api/v1/{*path}"})
+    public ResponseEntity<byte[]> proxyPut(HttpServletRequest request) {
+        return proxy(request);
+    }
+
+    @PatchMapping({"/api/v1", "/api/v1/{*path}"})
+    public ResponseEntity<byte[]> proxyPatch(HttpServletRequest request) {
+        return proxy(request);
+    }
+
+    @DeleteMapping({"/api/v1", "/api/v1/{*path}"})
+    public ResponseEntity<byte[]> proxyDelete(HttpServletRequest request) {
+        return proxy(request);
+    }
+
+    private ResponseEntity<byte[]> proxy(HttpServletRequest request) {
         String path = request.getRequestURI();
         try {
             String targetBaseUrl = gatewayRoutingService.resolveTargetBaseUrl(path);

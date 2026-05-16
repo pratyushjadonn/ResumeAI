@@ -28,7 +28,7 @@
         <maven.failsafe.plugin.version>3.2.5</maven.failsafe.plugin.version>
         <surefire.argLine></surefire.argLine>
         <failsafe.argLine></failsafe.argLine>
-        <sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/target/site/jacoco-aggregate/jacoco.xml,${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/**/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.junit.reportPaths>${project.build.directory}/surefire-reports,${project.build.directory}/failsafe-reports</sonar.junit.reportPaths>
     </properties>
 
@@ -153,22 +153,6 @@
                                 <format>XML</format>
                                 <format>HTML</format>
                             </formats>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>report-aggregate</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report-aggregate</goal>
-                        </goals>
-                        <inherited>false</inherited>
-                        <configuration>
-                            <outputDirectory>${maven.multiModuleProjectDirectory}/target/site/jacoco-aggregate</outputDirectory>
-                            <formats>
-                                <format>XML</format>
-                                <format>HTML</format>
-                            </formats>
-                            <includeCurrentProject>false</includeCurrentProject>
                         </configuration>
                     </execution>
                 </executions>

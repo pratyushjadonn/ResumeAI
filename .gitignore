@@ -28,3 +28,4 @@ resume-service/resume-run.err
 resume-service/resume-run.out
 ai-service/ai-run.err
 ai-service/ai-run.out
+/.metadata/

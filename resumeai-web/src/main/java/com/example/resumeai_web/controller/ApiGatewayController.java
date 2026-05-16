@@ -2,6 +2,7 @@ package com.example.resumeai_web.controller;
 
 import com.example.resumeai_web.service.GatewayRoutingService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,7 @@ public class ApiGatewayController {
     private final GatewayRoutingService gatewayRoutingService;
     private final HttpClient httpClient;
 
+    @Autowired
     public ApiGatewayController(GatewayRoutingService gatewayRoutingService) {
         this(gatewayRoutingService, HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))

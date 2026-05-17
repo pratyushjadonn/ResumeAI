@@ -6,19 +6,17 @@ WORKDIR /app
 # Copy parent pom
 COPY pom.xml .
 
-# Copy module poms
+# Copy auth-service pom
 COPY auth-service/pom.xml auth-service/
-COPY common-events/pom.xml common-events/
 
-# Download dependencies
-RUN mvn dependency:go-offline -pl auth-service -am
+# Download dependencies for auth-service only
+RUN mvn -f auth-service/pom.xml dependency:go-offline
 
 # Copy source code
 COPY auth-service/src auth-service/src
-COPY common-events/src common-events/src
 
 # Build auth-service
-RUN mvn clean package -DskipTests -pl auth-service -am
+RUN mvn -f auth-service/pom.xml clean package -DskipTests
 
 # Runtime image
 FROM eclipse-temurin:21-jre-alpine
